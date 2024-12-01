@@ -10,3 +10,10 @@ column1.sort()
 column2.sort()
     
 print('part 1 :', sum(np.abs(column1 - column2)))
+
+s_score = 0
+
+for number in column1:
+    s_score += list(column2).count(number) * number
+
+print('part 2 :', s_score)
