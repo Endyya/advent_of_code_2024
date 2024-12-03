@@ -15,6 +15,16 @@ with open('input') as f:
     for line in f:
         lines += line
 
+#lines = "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
 
+split_do = lines.split('do()')
+split_dont = [chunk.split("don't()") for chunk in split_do]
+        
 matching_pattern = re.findall(regexp, lines)
 print('part 1 :', sum([parse_mul(exp) for exp in matching_pattern]))
+
+enabled = [chunk[0] for chunk in split_dont]
+
+print('part 2 :', sum([parse_mul(exp)
+                       for chunk in enabled
+                       for exp in re.findall(regexp, chunk)]))
