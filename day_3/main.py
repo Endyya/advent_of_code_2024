@@ -15,8 +15,6 @@ with open('input') as f:
     for line in f:
         lines += line
 
-#lines = "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"
-
 split_do = lines.split('do()')
 split_dont = [chunk.split("don't()") for chunk in split_do]
         
