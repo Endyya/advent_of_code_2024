@@ -11,9 +11,6 @@ def build_antinodes(data, antinodes, part = 1):
                 - np.arange(data.shape[1])[np.newaxis, :])
     base_point = np.arange(data.shape[0])[:, np.newaxis]
 
-    coord_sym = vec_diff + base_point
-
-    
     for freq, count in zip(*np.unique(data, return_counts = True)):
         if freq == '.' or count == 1:
             continue
@@ -24,6 +21,8 @@ def build_antinodes(data, antinodes, part = 1):
         for (i1, i2), (j1, j2) in zip(itt.combinations(coord_i, 2),
                                       itt.combinations(coord_j, 2)):
             if part == 1:
+                coord_sym = vec_diff + base_point
+
                 if check_coord(coord_sym[i1, i2], coord_sym[j1, j2], antinodes):
                     antinodes[coord_sym[i1, i2], coord_sym[j1, j2]] = True
 
