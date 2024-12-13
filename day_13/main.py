@@ -30,6 +30,7 @@ def get_score(a_1: int, a_2: int,
 
 with open('input') as f:
     score = 0
+    score_2 = 0
     for line in f:
         line = line.split(',')        
         if line[0].startswith('Button A:'):
@@ -47,8 +48,13 @@ with open('input') as f:
             score += get_score(a_1 = a1_but, a_2 = a2_but,
                                b_1 = b1_but, b_2 = b2_but,
                                c_1 = c1, c_2 = c2)
+            score_2 += get_score(a_1 = a1_but, a_2 = a2_but,
+                                 b_1 = b1_but, b_2 = b2_but,
+                                 c_1 = c1 + 10000000000000,
+                                 c_2 = c2 + 10000000000000)
 
 print('part 1 :', score)
+print('part 2 :', score_2)
 
         
     
