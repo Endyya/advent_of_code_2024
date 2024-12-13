@@ -246,11 +246,6 @@ def is_loop(lab_map):
 
             is_exit = current_pos[1] == 0
 
-
-            # if (current_pos[0] in [0, lab_map.shape[0] - 1]
-            #     or current_pos[1] in [0, lab_map.shape[1]]):
-            #     is_exit = True
-
     return is_loop
 
 
