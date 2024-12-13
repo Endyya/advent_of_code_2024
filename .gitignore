@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#inputfiles / emacs temp
+day_*/input
+day_*/test
+day_*/input~
+day_*/test~
+day_*/*~
+make_folder.sh
+
 # C extensions
 *.so
 
