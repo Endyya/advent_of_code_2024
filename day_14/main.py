@@ -1,4 +1,5 @@
 import numpy as np
+from time import sleep
 
 
 
@@ -16,6 +17,7 @@ with open(filename) as f:
         speed.append([int(i) for i in speed_coords.split(',')])
 
 pos = np.array(pos)
+
 speed = np.array(speed)
 
 number_steps = 100
@@ -66,3 +68,33 @@ fourth_quad = final_pos[
 ]
 
 print('part 1 :', len(first_quad) * len(sec_quad) * len(third_quad) * len(fourth_quad))
+
+def display(pos):
+    str_out = np.full(shape = (x_max, y_max), fill_value = '-')
+    for coords in pos:
+
+        str_out[*coords] = '#'
+    str_out = np.transpose(str_out)
+    return '\n'.join([''.join(str_out[i, :]) for i in range(str_out.shape[0])])
+    
+
+last_pos = pos.copy()
+
+count = 0
+
+while True and count < x_max * y_max:
+
+    if '############' in display(last_pos):
+        print('\n'*3)
+        print(display(last_pos))
+        print('part 2 :', count)
+        break
+
+    last_pos = last_pos + speed
+    last_pos[:, 0] = last_pos[:, 0] % x_max
+    last_pos[:, 1] = last_pos[:, 1] % y_max
+    count += 1
+
+
+
+    
