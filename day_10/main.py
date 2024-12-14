@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import itertools as itt
 import matplotlib.pyplot as mpp
+from time import sleep
 
 data = []
 with open('input') as f:
@@ -58,21 +59,11 @@ for bot in bottom:
         count += 1
 
 print('part 1 :', score)
-    
-# pos = {}
-# color = {}
-# for i, j in itt.product(range(data.shape[0]), range(data.shape[1])):
-#     pos[f'{i},{j}'] = (i, j)
-#     color[f'{i},{j}'] = data[i, j]
 
+score = 0
 
-# nx.draw_networkx_nodes(profile, pos, node_color = list(color.values()),
-#                        node_size = 100)
+for bot, peak in itt.product(bottom, peaks):
+    score += len(list(nx.all_simple_paths(profile,
+                                          source = bot, target = peak)))
 
-# nx.draw_networkx_edges(profile, pos, node_size = 100, arrowsize = 1)
-
-# mpp.show()
-
-
-
-    
+print('part 2 :', score)
