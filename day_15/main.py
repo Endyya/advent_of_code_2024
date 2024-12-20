@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 import itertools as itt
 from termcolor import colored
 from time import sleep
@@ -27,9 +28,11 @@ class Object():
         if not self.is_movable:
             raise ValueError
 
+        save = copy.deepcopy(self)
+
         if (direction == '^'
             and (type(my_map.get_component(self.coords[0] - 1, self.coords[1]))
-                 == type(Empty(my_map = self, coords = (0, 0)))
+                 == type(Empty())
                  )
             ):
             comp = my_map.get_component(self.coords[0] - 1, self.coords[1])
@@ -38,7 +41,7 @@ class Object():
             self.has_moved = True
         elif (direction == 'v'
             and (type(my_map.get_component(self.coords[0] + 1, self.coords[1]))
-                 == type(Empty(my_map = self, coords = (0, 0)))
+                 == type(Empty())
                  )
             ):
             comp = my_map.get_component(self.coords[0] + 1, self.coords[1])
@@ -47,7 +50,7 @@ class Object():
             self.has_moved = True
         elif (direction == '>'
             and (type(my_map.get_component(self.coords[0], self.coords[1] + 1))
-                 == type(Empty(my_map = self, coords = (0, 0)))
+                 == type(Empty())
                  )
             ):
             comp = my_map.get_component(self.coords[0], self.coords[1] + 1)
@@ -56,7 +59,7 @@ class Object():
             self.has_moved = True
         elif (direction == '<'
             and (type(my_map.get_component(self.coords[0], self.coords[1] - 1))
-                 == type(Empty(my_map = self, coords = (0, 0)))
+                 == type(Empty())
                  )
             ):
             comp = my_map.get_component(self.coords[0], self.coords[1] - 1)
@@ -65,10 +68,12 @@ class Object():
             self.has_moved = True
         elif direction == '^':
             comp = my_map.get_component(self.coords[0] - 1, self.coords[1])
+            save_comp = copy.deepcopy(comp)
             try:
                 comp.move('^')
                 self.move('^')
             except:
+                #self = save
                 raise
         elif direction == 'v':
             try:
@@ -76,6 +81,7 @@ class Object():
                 comp.move('v')
                 self.move('v')
             except:
+                #self = save
                 raise
         elif direction == '>':
             try:
@@ -83,6 +89,7 @@ class Object():
                 comp.move('>')
                 self.move('>')
             except:
+                #self = save
                 raise
         elif direction == '<':
             try:
@@ -90,6 +97,7 @@ class Object():
                 comp.move('<')
                 self.move('<')
             except:
+                #self = save
                 raise            
             
     @property
@@ -104,6 +112,91 @@ class Robot(Object):
 class Box(Object):
     def __init__(self, *args, **kwargs):
         super().__init__(is_movable = True, *args, **kwargs)
+
+class WideBox(Object):
+    def __init__(self, my_map = Map(), coords = (0, 0), *args, **kwargs):
+        super().__init__(my_map = my_map, is_movable = True,
+                         coords = coords, *args, **kwargs)
+        self.right = RightBox(my_map = my_map, is_movable = True,
+                              wide = self,
+                              coords = (coords[0], coords[1] + 1),
+                              *args, **kwargs)
+        try:
+            my_map.add_component(self.right)
+        except AttributeError:
+            pass
+
+    def move(self, direction: str):
+
+        save = copy.deepcopy(self)
+        save_map = copy.deepcopy(self.my_map)
+        
+        if direction in ['>', '<']:
+            super().move(direction = direction)
+        else:
+            if direction == '^':
+                modif = -1
+            else:
+                modif = 1
+
+            coords = self.coords
+            left_comp = self.my_map.get_component(coords[0] + modif,
+                                                  coords[1])
+            right_comp = self.my_map.get_component(coords[0] + modif,
+                                                   coords[1] + 1)
+            save_left = copy.deepcopy(left_comp)
+            save_right = copy.deepcopy(right_comp)
+            try:
+                # if the space is not empty, try to move it, then move self
+                if type(left_comp) != type(Empty()):
+                    left_comp.move(direction = direction)
+                if not type(right_comp) in [
+                        type(Empty()), type(RightBox(wide = WideBox()))]: 
+                    right_comp.move(direction = direction)
+
+                # move wide object and linked rightbox
+                Object.move(self, direction = direction)
+                Object.move(self.right, direction = direction)                
+            except Exception as e:
+                #self.my_map = save_map
+
+                raise e
+
+class RightBox(Object):
+    def __init__(self, wide: WideBox, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.wide = wide
+    
+    def move(self, direction: str, link = False):
+        
+        if direction in ['>', '<']:
+            super().move(direction = direction)
+        else:
+            if direction == '^':
+                modif = -1
+            else:
+                modif = 1
+
+            coords = self.coords
+            left_comp = self.my_map.get_component(coords[0] + modif,
+                                                  coords[1] - 1)
+            right_comp = self.my_map.get_component(coords[0] + modif,
+                                                   coords[1])
+
+            try:
+                # if the space is not empty, try to move it, then move self
+                if type(left_comp) != type(Empty()):
+                    left_comp.move(direction = direction)
+                if not type(right_comp) in [
+                        type(Empty()), type(RightBox(wide = WideBox()))]: 
+                    right_comp.move(direction = direction)
+
+                # move wide object and linked rightbox
+                Object.move(self, direction = direction)
+                Object.move(self.wide, direction = direction)                
+            except Exception as e:
+                raise e
+    
 
 class Boundary(Object):
     def __init__(self, *args, **kwargs):
@@ -146,11 +239,43 @@ class Map():
         raise ValueError
 
     @staticmethod
-    def make_map(parse_map: np.array):
-        my_map = Map(parse_map)
+    def make_map(parse_map: np.array, part: int = 1):
+        if part == 1:
+            my_map = Map(parse_map)
+            for i, j in itt.product(range(parse_map.shape[0]),
+                                    range(parse_map.shape[1])):
+                comp = parse_map[i, j]
+                if comp == '#':
+                    new_comp = Boundary(my_map = my_map, coords = (i, j))
+                elif comp == '.':
+                    new_comp = Empty(my_map = my_map, coords = (i, j))
+                elif comp == '@':
+                    new_comp = Robot(my_map = my_map, coords = (i, j))
+                elif comp == 'O':
+                    new_comp = Box(my_map = my_map, coords = (i, j))
+
+                my_map.add_component(new_comp)
+
+                                    
+            return my_map
+        
+        # part 2 starts here
+
+        change_parse = np.zeros(shape = (parse_map.shape[0],
+                                         parse_map.shape[1] * 2),
+                                dtype = str)
         for i, j in itt.product(range(parse_map.shape[0]),
                                 range(parse_map.shape[1])):
-            comp = parse_map[i, j]
+            if parse_map[i, j] == 'O':
+                change_parse[i, 2 * j:2 * j + 2] = ['[', ']']
+            elif parse_map[i, j] == '@':
+                change_parse[i, 2 * j:2 * j + 2] = ['@', '.']
+            else:
+                change_parse[i, 2 * j:2 * j + 2] = parse_map[i, j]
+        my_map = Map(change_parse)
+        for i, j in itt.product(range(change_parse.shape[0]),
+                                range(change_parse.shape[1])):
+            comp = change_parse[i, j]
             if comp == '#':
                 new_comp = Boundary(my_map = my_map, coords = (i, j))
             elif comp == '.':
@@ -159,24 +284,28 @@ class Map():
                 new_comp = Robot(my_map = my_map, coords = (i, j))
             elif comp == 'O':
                 new_comp = Box(my_map = my_map, coords = (i, j))
+            elif comp == '[':
+                new_comp = WideBox(my_map = my_map, coords = (i, j))
 
             my_map.add_component(new_comp)
-
-                                    
         return my_map
 
     def display_map(self):
-        my_data = self.data.copy()
         comp_dict = {
             str(type(Robot())): '@',
             str(type(Empty())): ' ',
             str(type(Box())): 'O',
-            str(type(Boundary())): '#'}
+            str(type(Boundary())): '#',
+            str(type(WideBox())): '[',
+            str(type(RightBox(wide = WideBox()))): ']'}
 
         output = ''
         for i in range(self.data.shape[0]):
             for j in range(self.data.shape[1]):
-                comp = self.get_component(i, j)
+                try:
+                    comp = self.get_component(i, j)
+                except:
+                    raise
                 if comp.has_moved:
                     color = 'green'
                 else:
@@ -203,15 +332,14 @@ parse_map = np.array(parse_map, dtype = str)
 
 my_map = Map.make_map(parse_map)
 
-for inst in instructions:
+for k, inst in enumerate(instructions):
 
     robot = my_map.get_robot()
     try:
         robot.move(inst)
     except:
         pass
-    # my_map.display_map()
-    # sleep(0.1)
+
 
 score = 0
 for comp in my_map.components:
@@ -222,4 +350,26 @@ for comp in my_map.components:
 print("part 1 :", score)
 
 
+my_map = Map.make_map(parse_map, part = 2)
 
+for k, inst in enumerate(instructions):
+    robot = my_map.get_robot()
+    save_map = copy.deepcopy(my_map)
+    try:
+        robot.move(inst)
+    except Exception as e:
+        my_map = save_map
+
+score = 0
+
+
+for comp in set(my_map.components):
+
+
+    if type(comp) == type(WideBox()):
+        to_add = comp.coords[0] * 100 + comp.coords[1]
+        score += to_add
+
+print('part 2 :', score)
+
+        
